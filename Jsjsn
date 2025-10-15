@@ -1,0 +1,106 @@
+local gui = Instance.new("ScreenGui")
+gui.Name = "InstantStealGui"
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Main frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 200)
+frame.Position = UDim2.new(0.5, -90, 0.5, -90)
+frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+frame.BackgroundTransparency = 0.4
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+-- Blue outline
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(0, 140, 255)
+stroke.Thickness = 2
+stroke.Parent = frame
+
+-- Rounded corners
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = frame
+
+-- Draggable GUI
+frame.Active = true
+frame.Draggable = true
+
+-- Button creator function
+local function createButton(text, positionY)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -5, 0.5, -5)
+	btn.Position = UDim2.new(0, 5, positionY, 5)
+	btn.Text = text
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 14
+	btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	btn.BackgroundTransparency = 0.25
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 8)
+	btnCorner.Parent = btn
+
+	local btnStroke = Instance.new("UIStroke")
+	btnStroke.Color = Color3.fromRGB(0, 100, 255)
+	btnStroke.Thickness = 1.2
+	btnStroke.Parent = btn
+
+	btn.Parent = frame
+	return btn
+end
+
+-- Create buttons
+local stealBtn = createButton("Tween To Base", 0)
+local antiBtn = createButton("ANTI DEATH (You need for tween)", 0.5)
+
+-- Tween/Run Function
+local function runToPosition(hrp, targetPos)
+	local step = 1
+	while (hrp.Position - targetPos).Magnitude > 3 do
+		local direction = (targetPos - hrp.Position).Unit
+		hrp.CFrame = hrp.CFrame + direction * step
+		task.wait(0.03)
+	end
+	hrp.CFrame = CFrame.new(targetPos)
+end
+
+-- Tween Button Click
+stealBtn.MouseButton1Click:Connect(function()
+	local player = game.Players.LocalPlayer
+	local char = player.Character or player.CharacterAdded:Wait()
+	local hrp = char:WaitForChild("HumanoidRootPart")
+
+	local base
+	for _, plot in pairs(workspace.Plots:GetChildren()) do
+		local yourBase = plot:FindFirstChild("YourBase", true)
+		if yourBase and yourBase.Enabled then
+			base = plot:FindFirstChild("DeliveryHitbox", true)
+			break
+		end
+	end
+
+	if not base then
+		warn("⚠️ No base found!")
+		return
+	end
+
+	runToPosition(hrp, base.Position)
+end)
+
+-- Anti Death Function
+antiBtn.MouseButton1Click:Connect(function()
+	local player = game.Players.LocalPlayer
+	local char = player.Character or player.CharacterAdded:Wait()
+	local hum = char:FindFirstChildOfClass("Humanoid")
+
+	if hum then
+		hum.HealthChanged:Connect(function(health)
+			if health <= 0 then
+				hum.Health = hum.MaxHealth
+			end
+		end)
+		print("🛡️ Anti-death enabled!")
+	end
+end)
